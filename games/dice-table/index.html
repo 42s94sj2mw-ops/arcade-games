@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="骰局：公平双人三骰回合制游戏。自定义筹码、贷款与利息，跨设备纯 P2P 联机。">
+<meta name="theme-color" content="#f2efe8">
+<title>骰局 · 游戏集</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23f2efe8'/%3E%3Crect x='15' y='15' width='34' height='34' fill='%23fffdf8' stroke='%23171512' stroke-width='2'/%3E%3Ccircle cx='25' cy='25' r='3' fill='%23171512'/%3E%3Ccircle cx='39' cy='32' r='3' fill='%23b23a2c'/%3E%3Ccircle cx='25' cy='39' r='3' fill='%23171512'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="../../shared/base.css">
+<link rel="stylesheet" href="dice.css">
+</head>
+<body class="game-body">
+
+<noscript><div class="noscript">本游戏需要启用 JavaScript。</div></noscript>
+
+<div class="game-shell">
+
+  <header class="game-head wrap">
+    <div class="game-head__left">
+      <a class="back-link" id="link-home" href="../../index.html" aria-label="返回游戏集">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12 4L6 10l6 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>游戏集</span>
+      </a>
+      <span class="head-divider" aria-hidden="true"></span>
+      <a class="game-brand" href="index.html">
+        <span class="game-brand__mark">骰</span>
+        <span class="game-brand__text">骰局 <span>DICE TABLE</span></span>
+      </a>
+    </div>
+
+    <div class="game-head__center">
+      <span class="head-context" id="head-context">THREE DICE · TWO PLAYERS</span>
+      <strong class="head-round" id="head-round"></strong>
+    </div>
+
+    <div class="game-head__right">
+      <span class="connection-pill is-offline" id="connection-pill">
+        <i></i><span id="connection-text">未联机</span>
+      </span>
+      <button class="btn btn--small btn--ghost head-rule-btn" type="button" data-modal-open="modal-rules">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10 9v4M10 6.5v.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        规则
+      </button>
+    </div>
+  </header>
+
+  <main class="game-main">
+
+    <!-- =====================================================
+         Home
+         ===================================================== -->
+    <section class="screen is-active" id="screen-home" aria-labelledby="home-title">
+      <div class="home-wrap wrap">
+        <div class="home-intro">
+          <div class="home-intro__copy">
+            <p class="eyebrow">No. 01 · Fair dice · Two players</p>
+            <h1 id="home-title">骰局</h1>
+            <p class="home-lead">三颗骰子，一手牌型。轮流坐庄，自由下注，按牌型倍数结算。没有暗箱，没有倒计时，规则全部摆在桌面上。</p>
+          </div>
+          <div class="home-marks" aria-label="游戏信息">
+            <div><span>人数</span><strong>02</strong></div>
+            <div><span>骰子</span><strong>03</strong></div>
+            <div><span>联机</span><strong>P2P</strong></div>
+          </div>
+        </div>
+
+        <div class="home-tabs" role="tablist" aria-label="房间模式">
+          <button class="home-tab is-active" type="button" role="tab" aria-selected="true" data-home-tab="create">创建房间</button>
+          <button class="home-tab" type="button" role="tab" aria-selected="false" data-home-tab="join">加入房间</button>
+        </div>
+
+        <div class="home-grid" id="home-grid" data-mode="create">
+          <form class="setup-panel" id="create-form" novalidate>
+            <header class="panel-head">
+              <div>
+                <p class="eyebrow">Host a table</p>
+                <h2>创建房间</h2>
+              </div>
+              <span class="panel-index">01</span>
+            </header>
+            <p class="panel-lead">由你设定本局规则。规则一旦开局，双方都不能更改。</p>
+
+            <div class="field">
+              <label class="field__label" for="host-name">你的名字 <span class="field__hint">最多 14 个字</span></label>
+              <input id="host-name" name="hostName" type="text" maxlength="14" autocomplete="off" placeholder="房主">
+            </div>
+
+            <div class="settings-grid">
+              <div class="field">
+                <label class="field__label" for="create-chips">初始筹码</label>
+                <input id="create-chips" name="startingChips" type="number" inputmode="numeric" min="1" max="100000000" step="1" value="1000">
+              </div>
+              <div class="field">
+                <label class="field__label" for="create-interest">每手利率</label>
+                <div class="input-unit">
+                  <input id="create-interest" name="interestRate" type="number" inputmode="decimal" min="0" max="100" step="0.1" value="5">
+                  <span class="input-unit__suffix">%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="switch-row">
+              <span class="switch-copy">
+                <strong>允许贷款</strong>
+                <span>双方可借款周转，并按手计息。</span>
+              </span>
+              <label class="switch">
+                <input id="create-loans" type="checkbox" checked>
+                <span class="switch__track"></span>
+                <span class="sr-only">允许贷款</span>
+              </label>
+            </div>
+
+            <div class="field" id="debt-limit-field">
+              <label class="field__label" for="create-debt-limit">债务上限 <span class="field__hint">达到后立即终局</span></label>
+              <input id="create-debt-limit" name="debtLimit" type="number" inputmode="numeric" min="1" max="100000000" step="1" value="2000">
+            </div>
+
+            <div class="switch-row">
+              <span class="switch-copy">
+                <strong>允许弃权</strong>
+                <span>闲家看完庄家牌后，可付半注弃权。</span>
+              </span>
+              <label class="switch">
+                <input id="create-fold" type="checkbox" checked>
+                <span class="switch__track"></span>
+                <span class="sr-only">允许弃权</span>
+              </label>
+            </div>
+
+            <p class="form-error hidden" id="create-error" role="alert"></p>
+
+            <button class="btn btn--primary btn--wide" id="btn-create" type="submit">
+              生成邀请码
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <p class="panel-note">首次连接需要交换两次联机码，之后所有对局数据只在两台设备间直连。</p>
+          </form>
+
+          <form class="setup-panel setup-panel--join" id="join-form" novalidate>
+            <header class="panel-head">
+              <div>
+                <p class="eyebrow">Join a table</p>
+                <h2>加入房间</h2>
+              </div>
+              <span class="panel-index">02</span>
+            </header>
+            <p class="panel-lead">输入对方发来的邀请码，确认房间设置后生成应答码。</p>
+
+            <div class="field">
+              <label class="field__label" for="guest-name">你的名字 <span class="field__hint">最多 14 个字</span></label>
+              <input id="guest-name" name="guestName" type="text" maxlength="14" autocomplete="off" placeholder="客人">
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="invite-code">邀请码</label>
+              <textarea id="invite-code" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="把房主发来的整段邀请码粘贴到这里"></textarea>
+            </div>
+
+            <p class="form-error hidden" id="join-error" role="alert"></p>
+
+            <button class="btn btn--wide" id="btn-read-invite" type="submit">
+              读取邀请码
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+
+            <div class="join-aside">
+              <span class="join-aside__mark">P2P</span>
+              <p>无服务器，无账号。联机码就是唯一的门。</p>
+            </div>
+          </form>
+        </div>
+
+        <div class="home-strip">
+          <div>
+            <p class="eyebrow">Read before playing</p>
+            <p>牌型、赔率、贷款、利息、弃权与终局条件都写在规则里。</p>
+          </div>
+          <button class="text-link" type="button" data-modal-open="modal-rules">完整规则说明 <span>↗</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         Connect
+         ===================================================== -->
+    <section class="screen" id="screen-connect" aria-labelledby="connect-title">
+      <div class="connect-wrap wrap">
+        <button class="back-text" type="button" id="connect-back">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12 4L6 10l6 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          返回
+        </button>
+
+        <div class="connect-head">
+          <p class="eyebrow" id="connect-eyebrow">Room setup</p>
+          <h1 id="connect-title">正在准备房间</h1>
+          <p id="connect-lead">请稍候，正在收集网络地址。</p>
+        </div>
+
+        <div class="connect-grid">
+          <div class="connect-main">
+            <div class="connect-loading" id="connect-loading">
+              <span class="loader-dot"></span>
+              <span id="connect-loading-text">正在生成邀请码…</span>
+            </div>
+
+            <div class="host-flow hidden" id="host-connect-flow">
+              <div class="connect-step">
+                <div class="step-marker"><span>1</span></div>
+                <div class="step-body">
+                  <div class="step-head">
+                    <div>
+                      <h2>把邀请码发给对方</h2>
+                      <p>对方打开同一个网页，选择“加入房间”。</p>
+                    </div>
+                    <button class="btn btn--small" type="button" data-copy-target="invite-out">复制邀请码</button>
+                  </div>
+                  <textarea class="code-out" id="invite-out" readonly spellcheck="false" aria-label="邀请码"></textarea>
+                  <p class="code-note">邀请码较长，请完整发送。它包含本次连接的加密握手信息。</p>
+                </div>
+              </div>
+
+              <div class="connect-step">
+                <div class="step-marker"><span>2</span></div>
+                <div class="step-body">
+                  <div class="step-head">
+                    <div>
+                      <h2>粘贴对方的应答码</h2>
+                      <p>对方生成应答码后，把它发回给你。</p>
+                    </div>
+                  </div>
+                  <textarea id="answer-in" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="把对方发来的应答码粘贴到这里"></textarea>
+                  <p class="form-error hidden" id="answer-error" role="alert"></p>
+                  <button class="btn btn--primary" type="button" id="btn-accept-answer">建立连接</button>
+                </div>
+              </div>
+
+              <div class="connect-status" id="host-connect-status">
+                <span class="status-dot"></span>
+                <span>等待对方生成应答码</span>
+              </div>
+            </div>
+
+            <div class="guest-flow hidden" id="guest-connect-flow">
+              <div class="connect-step">
+                <div class="step-marker"><span>1</span></div>
+                <div class="step-body">
+                  <div class="step-head">
+                    <div>
+                      <h2>确认房间设置</h2>
+                      <p>邀请码读取成功。确认后生成应答码。</p>
+                    </div>
+                  </div>
+                  <div class="invite-summary" id="invite-summary"></div>
+                  <button class="btn btn--primary" type="button" id="btn-generate-answer">生成应答码</button>
+                </div>
+              </div>
+
+              <div class="connect-step hidden" id="guest-answer-step">
+                <div class="step-marker"><span>2</span></div>
+                <div class="step-body">
+                  <div class="step-head">
+                    <div>
+                      <h2>把应答码发回给房主</h2>
+                      <p>房主粘贴应答码后，连接会自动建立。</p>
+                    </div>
+                    <button class="btn btn--small" type="button" data-copy-target="answer-out">复制应答码</button>
+                  </div>
+                  <textarea class="code-out" id="answer-out" readonly spellcheck="false" aria-label="应答码"></textarea>
+                  <p class="code-note">保持此页面打开。房主完成连接前不要刷新。</p>
+                </div>
+              </div>
+
+              <div class="connect-status" id="guest-connect-status">
+                <span class="status-dot"></span>
+                <span>正在等待房主连接</span>
+              </div>
+            </div>
+          </div>
+
+          <aside class="connect-aside">
+            <p class="eyebrow">Room</p>
+            <dl class="room-facts" id="connect-room-facts">
+              <div><dt>房主</dt><dd id="connect-host-name">—</dd></div>
+              <div><dt>初始筹码</dt><dd id="connect-chips">—</dd></div>
+              <div><dt>贷款</dt><dd id="connect-loans">—</dd></div>
+              <div><dt>债务上限</dt><dd id="connect-debt">—</dd></div>
+              <div><dt>每手利率</dt><dd id="connect-interest">—</dd></div>
+              <div><dt>弃权</dt><dd id="connect-fold">—</dd></div>
+            </dl>
+            <div class="aside-rule"></div>
+            <p class="aside-note"><strong>隐私提示</strong>联机码包含网络协商信息，只发给你的对手。房间数据不经过任何服务器。</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         Connected room
+         ===================================================== -->
+    <section class="screen" id="screen-room" aria-labelledby="room-title">
+      <div class="room-wrap wrap">
+        <div class="room-head">
+          <p class="eyebrow">Connection established</p>
+          <h1 id="room-title">房间已连接</h1>
+          <p>数据通道已建立。确认规则后，由房主开始对局。</p>
+        </div>
+
+        <div class="room-card">
+          <div class="room-duelists">
+            <div class="room-duelist">
+              <span class="room-seal">甲</span>
+              <div>
+                <span class="room-role">房主</span>
+                <h2 id="room-host-name">—</h2>
+                <p>先手由定庄掷骰决定，之后每手轮庄。</p>
+              </div>
+            </div>
+            <span class="room-vs">×</span>
+            <div class="room-duelist room-duelist--right">
+              <span class="room-seal">乙</span>
+              <div>
+                <span class="room-role">客人</span>
+                <h2 id="room-guest-name">—</h2>
+                <p>双方各持同等初始筹码。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="room-settings" id="room-settings"></div>
+
+          <div class="room-start">
+            <div>
+              <p class="eyebrow">Ready</p>
+              <p id="room-wait-note">等待房主开始对局。</p>
+            </div>
+            <button class="btn btn--accent hidden" type="button" id="btn-start-game">开始对局</button>
+            <span class="waiting-mark hidden" id="room-waiting-mark"><i></i>已连接，等待中</span>
+          </div>
+        </div>
+
+        <div class="room-foot">
+          <span class="room-foot__dot"></span>
+          <span>对局数据仅在两台设备之间传输，不会上传。</span>
+          <button class="text-link" type="button" data-modal-open="modal-rules">查看规则</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         Table
+         ===================================================== -->
+    <section class="screen" id="screen-table" aria-labelledby="table-context">
+      <div class="table-wrap wrap">
+        <div class="table-topline">
+          <div class="table-topline__left">
+            <span class="eyebrow" id="table-context">TABLE</span>
+            <span class="table-settings" id="table-settings"></span>
+          </div>
+          <div class="table-topline__right">
+            <span class="table-connection"><i></i>直连中</span>
+            <button class="text-link text-link--small" type="button" id="btn-table-leave">离开牌桌</button>
+          </div>
+        </div>
+
+        <div class="players-strip">
+          <article class="player-card" id="player-card-host" data-player-card="host">
+            <div class="player-card__identity">
+              <span class="player-seal">甲</span>
+              <div class="player-card__name-wrap">
+                <div class="player-card__badges">
+                  <span class="role-badge" data-role-badge="host">闲家</span>
+                  <span class="you-badge" data-you-badge="host">你</span>
+                </div>
+                <h3 data-player-name="host">—</h3>
+              </div>
+              <button class="loan-mini" type="button" data-loan-player="host">贷款</button>
+            </div>
+            <div class="player-card__figures">
+              <div>
+                <span>筹码</span>
+                <strong data-player-chips="host">1,000</strong>
+              </div>
+              <div class="debt-figure">
+                <span>欠款</span>
+                <strong data-player-debt="host">0</strong>
+              </div>
+              <div class="net-figure">
+                <span>净资产</span>
+                <strong data-player-net="host">1,000</strong>
+              </div>
+            </div>
+            <div class="player-card__foot">
+              <span class="player-state" data-player-state="host">等待</span>
+              <span class="player-ready" data-player-ready="host"></span>
+            </div>
+          </article>
+
+          <article class="player-card" id="player-card-guest" data-player-card="guest">
+            <div class="player-card__identity">
+              <span class="player-seal">乙</span>
+              <div class="player-card__name-wrap">
+                <div class="player-card__badges">
+                  <span class="role-badge" data-role-badge="guest">庄家</span>
+                  <span class="you-badge" data-you-badge="guest">你</span>
+                </div>
+                <h3 data-player-name="guest">—</h3>
+              </div>
+              <button class="loan-mini" type="button" data-loan-player="guest">贷款</button>
+            </div>
+            <div class="player-card__figures">
+              <div>
+                <span>筹码</span>
+                <strong data-player-chips="guest">1,000</strong>
+              </div>
+              <div class="debt-figure">
+                <span>欠款</span>
+                <strong data-player-debt="guest">0</strong>
+              </div>
+              <div class="net-figure">
+                <span>净资产</span>
+                <strong data-player-net="guest">1,000</strong>
+              </div>
+            </div>
+            <div class="player-card__foot">
+              <span class="player-state" data-player-state="guest">等待</span>
+              <span class="player-ready" data-player-ready="guest"></span>
+            </div>
+          </article>
+        </div>
+
+        <div class="table-layout">
+          <div class="table-main">
+            <div class="table-stage">
+              <div class="stage-topline">
+                <div class="stage-hand">
+                  <span class="eyebrow">Hand</span>
+                  <strong id="table-hand">01</strong>
+                  <span class="stage-of">/ 无上限</span>
+                </div>
+                <div class="stage-bet" id="stage-bet">
+                  <span>本手注额</span>
+                  <strong>—</strong>
+                </div>
+              </div>
+
+              <div class="racks">
+                <section class="rack" data-rack="banker">
+                  <div class="rack-head">
+                    <span class="rack-role">庄</span>
+                    <span class="rack-name" data-rack-name="banker">—</span>
+                  </div>
+                  <div class="dice-row" data-rack-dice="banker" aria-live="polite"></div>
+                  <div class="rack-hand" data-rack-hand="banker">等待掷骰</div>
+                  <div class="rack-history" data-rack-history="banker"></div>
+                </section>
+
+                <div class="rack-divider" aria-hidden="true"></div>
+
+                <section class="rack" data-rack="child">
+                  <div class="rack-head">
+                    <span class="rack-role">闲</span>
+                    <span class="rack-name" data-rack-name="child">—</span>
+                  </div>
+                  <div class="dice-row" data-rack-dice="child" aria-live="polite"></div>
+                  <div class="rack-hand" data-rack-hand="child">等待庄家</div>
+                  <div class="rack-history" data-rack-history="child"></div>
+                </section>
+              </div>
+
+              <div class="stage-readout">
+                <p class="stage-phase" id="stage-phase">等待闲家下注</p>
+                <div class="stage-outcome hidden" id="stage-outcome">
+                  <div>
+                    <p class="eyebrow">Settlement</p>
+                    <h2 id="stage-outcome-title">—</h2>
+                    <p id="stage-outcome-detail"></p>
+                  </div>
+                  <div class="outcome-figures" id="stage-outcome-figures"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="action-dock" id="action-dock">
+              <div class="action-head">
+                <div>
+                  <p class="eyebrow" id="action-eyebrow">Next action</p>
+                  <h2 id="action-title">等待开始</h2>
+                </div>
+                <p class="action-sub" id="action-sub"></p>
+              </div>
+
+              <div class="action-body">
+                <div class="turn-wait hidden" id="action-wait">
+                  <span class="pulse-dot"></span>
+                  <span id="action-wait-text">等待对方行动</span>
+                </div>
+
+                <form class="bet-control hidden" id="action-bet" novalidate>
+                  <div class="bet-input-wrap">
+                    <span>注额</span>
+                    <input id="bet-input" type="number" inputmode="numeric" min="1" step="1" autocomplete="off" aria-label="本手下注额">
+                    <em>筹码</em>
+                  </div>
+                  <div class="quick-bets" aria-label="快速下注">
+                    <button type="button" data-bet-fill="0.25">25%</button>
+                    <button type="button" data-bet-fill="0.5">50%</button>
+                    <button type="button" data-bet-fill="1">全下</button>
+                  </div>
+                  <button class="btn btn--accent" type="submit" id="btn-bet">确认下注</button>
+                  <p class="bet-hint" id="bet-hint"></p>
+                </form>
+
+                <div class="roll-control hidden" id="action-banker">
+                  <div class="control-copy">
+                    <span class="control-label">庄家行动</span>
+                    <p>最多三投，出有效牌型即停。无目自动判负。</p>
+                  </div>
+                  <button class="btn btn--accent" type="button" id="btn-roll-banker">掷骰</button>
+                </div>
+
+                <div class="child-control hidden" id="action-child">
+                  <div class="control-copy">
+                    <span class="control-label" id="child-control-copy">庄家已定牌</span>
+                    <p>看完庄家的牌，决定是否继续。</p>
+                  </div>
+                  <div class="control-actions">
+                    <button class="btn child-fold hidden" type="button" id="btn-fold">弃权</button>
+                    <button class="btn btn--accent" type="button" id="btn-roll-child">掷骰</button>
+                  </div>
+                </div>
+
+                <div class="ready-control hidden" id="action-ready">
+                  <div class="control-copy">
+                    <span class="control-label">本手结束</span>
+                    <p id="ready-copy">整理贷款后准备下一手。</p>
+                  </div>
+                  <div class="control-actions">
+                    <button class="btn btn--ghost ready-loan-btn" type="button" id="btn-ready-loan">贷款管理</button>
+                    <button class="btn btn--accent" type="button" id="btn-ready">准备下一手</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="action-foot">
+                <span class="action-status" id="action-status">无时间限制 · 请从容决定</span>
+                <span class="action-turn-tag" id="action-turn-tag"></span>
+              </div>
+            </div>
+          </div>
+
+          <aside class="log-panel" aria-label="对局记录">
+            <header class="log-head">
+              <div>
+                <p class="eyebrow">Ledger</p>
+                <h2>对局记录</h2>
+              </div>
+              <span class="mono" id="log-hand">HAND 01</span>
+            </header>
+            <div class="log-list" id="log-list" role="log" aria-live="polite"></div>
+            <footer class="log-foot">
+              <span>所有结果实时同步</span>
+              <button class="text-link text-link--small" type="button" data-modal-open="modal-rules">规则</button>
+            </footer>
+          </aside>
+        </div>
+
+        <footer class="table-foot">
+          <span><i></i>纯 P2P 直连</span>
+          <span>玩的是筹码，不是钱。</span>
+        </footer>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- =====================================================
+     Rules modal
+     ===================================================== -->
+<div class="modal modal--full" id="modal-rules" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="rules-title">
+  <div class="modal__panel" role="document">
+    <div class="modal__head rules-head">
+      <div>
+        <p class="eyebrow">Dice table · Complete rules</p>
+        <h2 id="rules-title">骰局规则</h2>
+        <p class="rules-sub">一份完整的桌规，没有隐藏条款。</p>
+      </div>
+      <button class="modal__close" type="button" data-modal-close aria-label="关闭规则">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div class="rules-doc">
+      <section class="rules-section">
+        <span class="rules-number">00</span>
+        <div>
+          <h3>这是什么</h3>
+          <p>「骰局」是一个公平双人回合制骰子游戏。两位玩家各持相同初始筹码，轮流坐庄，用三颗骰子组成牌型，按牌型倍数结算筹码。</p>
+          <p>没有 AI，没有时间限制，没有出千机制。三颗骰子均为公平随机，由房主端使用系统安全随机数生成。</p>
+          <p class="rule-aside">这里的所有筹码都只是游戏数值，不涉及真实货币。</p>
+        </div>
+      </section>
+
+      <section class="rules-section">
+        <span class="rules-number">01</span>
+        <div>
+          <h3>开局设置</h3>
+          <div class="rule-defs">
+            <div><dt>初始筹码</dt><dd>房主设定，双方相同。所有下注和赔付都以它为起点。</dd></div>
+            <div><dt>贷款开关</dt><dd>关闭时没有欠款；开启时双方可以借款、还款，并按手计息。</dd></div>
+            <div><dt>债务上限</dt><dd>仅贷款开启时生效。任一玩家累计欠款达到该数值时终局。</dd></div>
+            <div><dt>每手利率</dt><dd>每手结算后按未还欠款计算利息，向上取整并计入欠款。利率可以是 0%。</dd></div>
+            <div><dt>弃权开关</dt><dd>开启时，闲家看完庄家的有效牌型后可以选择付半注弃权。</dd></div>
+          </div>
+          <p>设置由房主在创建房间时确定，客人确认邀请码后才生成应答码。开局后所有设置不可更改。</p>
+        </div>
+      </section>
+
+      <section class="rules-section">
+        <span class="rules-number">02</span>
+        <div>
+          <h3>一手牌</h3>
+          <ol class="rule-steps">
+            <li><strong>下注。</strong>当前闲家决定注额，最少 1 筹码，最多不超过自己当前持有的筹码。需要更多筹码可以先贷款。</li>
+            <li><strong>庄家掷骰。</strong>庄家最多掷三次，直到出现有效牌型。无目必须重掷；出现有效牌型立即停手。</li>
+            <li><strong>庄家自动输。</strong>若庄家三投仍无目，或掷出 1 · 2 · 3，则本手立即结束，闲家不用再掷。</li>
+            <li><strong>闲家决定。</strong>庄家成牌后，闲家可以弃权（若开启）或掷骰。闲家同样最多三次，出现有效牌型即停。</li>
+            <li><strong>比牌与结算。</strong>双方牌型比较大小，输家按赢家牌型的倍数支付筹码。牌型相同则和局，不退不赔。</li>
+            <li><strong>计息与下一手。</strong>本手结算后计息、检查终局，然后双方可以整理贷款；两人都准备后进入下一手，庄闲互换。</li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="rules-section">
+        <span class="rules-number">03</span>
+        <div>
+          <h3>牌型与倍数</h3>
+          <div class="rules-table-wrap">
+            <table class="rules-table">
+              <thead>
+                <tr><th>牌型</th><th>组合</th><th>强弱</th><th>结算</th></tr>
+              </thead>
+              <tbody id="rules-hand-body"></tbody>
+            </table>
+          </div>
+          <div class="rule-callouts">
+            <p><strong>普通目：</strong>两颗同点，剩下的单颗就是点数。例如 2 · 2 · 6 是「六点」，不是总和。点数 6 最大，1 最小。</p>
+            <p><strong>豹子比较：</strong>不同数字的豹子按数字大小比，6 · 6 · 6 大于 2 · 2 · 2；1 · 1 · 1 单独作为最强牌。</p>
+            <p><strong>和局：</strong>双方最终牌型的等级完全相同，本手不结算。没有「庄家赢同点」的隐藏规则。</p>
+            <p><strong>无目：</strong>三次都没有有效牌型，算自动输一倍。庄家无目时闲家不掷；闲家无目时庄家收一倍。</p>
+            <p><strong>比牌大小：</strong>一之豹 &gt; 豹子 &gt; 四五六 &gt; 普通六点 &gt; … &gt; 普通一点。一二三和无目是负牌，不参与大小比较。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="rules-section">
+        <span class="rules-number">04</span>
+        <div>
+          <h3>赔率怎么算</h3>
+          <p>赢家按<strong>自己的牌型倍数</strong>收取注额。不是固定赔率，也不是只由点数决定。</p>
+          <div class="rule-examples">
+            <div><span>四五六</span><p>下注 100，赢 2 倍 → 收 200。</p></div>
+            <div><span>六之豹</span><p>下注 100，赢 3 倍 → 收 300。</p></div>
+            <div><span>一之豹</span><p>下注 100，赢 5 倍 → 收 500。</p></div>
+            <div><span>一二三</span><p>无论对方是什么，输 2 倍 → 付 200。</p></div>
+          </div>
+          <p class="rule-aside">庄家输时，闲家按闲家牌型倍数收取；庄家赢时，闲家按庄家牌型倍数支付。</p>
+        </div>
+      </section>
+
+      <section class="rules-section">
+        <span class="rules-number">05</span>
+        <div>
+          <h3>弃权</h3>
+          <p>只在「允许弃权」时开放。闲家看完庄家的有效牌型后，可以在自己掷骰前弃权。</p>
+          <p>弃权费为本手下注的 <strong>50%</strong>，筹码向上取整，支付给庄家，本手立即结束。例如下注 51，弃权费是 26。</p>
+          <p>庄家无目或掷出一二三时，本手已自动结束，不能弃权。</p>
+        </div>
+      </section>
+
+      <section class="rules-section">
+        <span class="rules-number">06</span>
+        <div>
+          <h3>贷款、还款与利息</h3>
+          <p>仅当房主开启贷款时生效。双方在下注前或本手结算后都可以操作；牌局进行中不可操作。</p>
+          <div class="rule-defs">
+            <div><dt>借款</dt><dd>金额自选，筹码立即增加，欠款等额增加。累计欠款不能超过债务上限。</dd></div>
+            <div><dt>还款</dt><dd>金额自选，最多不超过当前筹码与欠款。筹码减少，欠款等额减少。</dd></div>
+            <div><dt>利息</dt><dd>每手结算后，欠款 × 每手利率，向上取整，计入欠款。下一手按新的欠款继续计息。</dd></div>
+            <div><dt>赔付不足</dt><dd>贷款开启时，若筹码不足以赔付，会自动借款完成赔付；这笔强制借款同样计入欠款并参与计息。</dd></div>
+            <div><dt>主动借到上限</dt><dd>如果一笔主动借款使欠款达到债务上限，对局立即结束，该玩家判负。操作前界面会警告。</dd></div>
+          </div>
+          <p class="rule-aside">无贷款模式下，赔付以输家剩余筹码为限；输家筹码归零时对局结束，未支付部分不再结算。</p>
+        </div>
+      </section>
+
+      <section class="rules-section">
+        <span class="rules-number">07</span>
+        <div>
+          <h3>终局与胜负</h3>
+          <div class="rule-defs">
+            <div><dt>贷款开启</dt><dd>任一玩家累计欠款达到债务上限时，该玩家判负。若双方同时达到，比较「筹码 − 欠款」的净资产，高者胜；完全相同则和局。</dd></div>
+            <div><dt>贷款关闭</dt><dd>任一玩家筹码归零时，另一方获胜；双方同时归零则和局。</dd></div>
+            <div><dt>计息顺序</dt><dd>先完成本手赔付，再计算利息，最后检查是否触顶。触顶立即终局。</dd></div>
+            <div><dt>最后一手</dt><dd>赔付或利息可以把欠款推过债务上限；本手仍按完整金额结算，赢家收足赔付，然后立即终局。</dd></div>
+          </div>
+          <p>终局后不再接受下注、贷款或弃权。可以查看最终筹码、欠款和本局统计。</p>
+        </div>
+      </section>
+
+      <section class="rules-section">
+        <span class="rules-number">08</span>
+        <div>
+          <h3>庄家轮换与准备</h3>
+          <p>第一手庄家由双方各掷一颗骰子决定，点数大者先坐庄；相同则重掷。之后每手结束、双方都按下「准备下一手」后，庄闲自动互换。</p>
+          <p>无时间限制。你可以一直思考，直到做出决定；对手断开连接除外。</p>
+        </div>
+      </section>
+
+      <section class="rules-section">
+        <span class="rules-number">09</span>
+        <div>
+          <h3>联机与隐私</h3>
+          <p>纯 P2P：房主生成邀请码，客人返回应答码，连接由 WebRTC 在两台设备之间直接建立。没有房间服务器，没有账号，不需要注册。</p>
+          <p>邀请码和应答码包含连接协商信息与网络地址，只应发给你的对手。房主负责运行对局逻辑，双方看到的牌局状态会持续同步。</p>
+          <p>任意一方关闭页面、刷新或网络断开，本局都会结束，无法在断线后恢复。请先确认网络稳定再开始。</p>
+        </div>
+      </section>
+
+      <p class="rules-end">规则版本 1.0 · 用完请把桌面留给下一位朋友</p>
+    </div>
+
+    <div class="modal__foot">
+      <button class="btn btn--primary" type="button" data-modal-close>知道了</button>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     Loan modal
+     ===================================================== -->
+<div class="modal" id="modal-loan" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="loan-title">
+  <div class="modal__panel" role="document">
+    <div class="modal__head">
+      <div>
+        <p class="eyebrow">Credit</p>
+        <h2 id="loan-title">贷款管理</h2>
+        <p class="modal-sub"><span id="loan-player-name">—</span> 的筹码与欠款</p>
+      </div>
+      <button class="modal__close" type="button" data-modal-close aria-label="关闭贷款管理">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div class="loan-figures">
+      <div><span>当前筹码</span><strong id="loan-chips">0</strong></div>
+      <div><span>当前欠款</span><strong id="loan-debt">0</strong></div>
+      <div><span>剩余可借</span><strong id="loan-credit">0</strong></div>
+    </div>
+
+    <p class="loan-rule-line" id="loan-rule-line">每手利息 0% · 债务上限 0</p>
+
+    <section class="loan-block">
+      <div class="loan-block__head">
+        <div>
+          <h3>借款</h3>
+          <p>筹码立即到账，欠款等额增加。</p>
+        </div>
+      </div>
+      <div class="loan-action-row">
+        <div class="loan-input">
+          <input id="loan-borrow-input" type="number" inputmode="numeric" min="1" step="1" placeholder="借款金额" aria-label="借款金额">
+        </div>
+        <button class="btn" type="button" id="btn-borrow">确认借款</button>
+      </div>
+      <div class="quick-bets quick-bets--light" aria-label="快速借款">
+        <button type="button" data-loan-fill="borrow" data-loan-pct="0.25">25%</button>
+        <button type="button" data-loan-fill="borrow" data-loan-pct="0.5">50%</button>
+        <button type="button" data-loan-fill="borrow" data-loan-pct="1">借满</button>
+      </div>
+      <p class="loan-warning hidden" id="borrow-warning"></p>
+    </section>
+
+    <section class="loan-block">
+      <div class="loan-block__head">
+        <div>
+          <h3>还款</h3>
+          <p>从当前筹码中划扣，减少等额欠款。</p>
+        </div>
+      </div>
+      <div class="loan-action-row">
+        <div class="loan-input">
+          <input id="loan-repay-input" type="number" inputmode="numeric" min="1" step="1" placeholder="还款金额" aria-label="还款金额">
+        </div>
+        <button class="btn" type="button" id="btn-repay">确认还款</button>
+      </div>
+      <div class="quick-bets quick-bets--light" aria-label="快速还款">
+        <button type="button" data-loan-fill="repay" data-loan-pct="0.25">25%</button>
+        <button type="button" data-loan-fill="repay" data-loan-pct="0.5">50%</button>
+        <button type="button" data-loan-fill="repay" data-loan-pct="1">还清</button>
+      </div>
+      <p class="loan-note" id="loan-repay-note"></p>
+    </section>
+
+    <div class="loan-foot">
+      <p>贷款操作只在非掷骰阶段开放。主动借款触顶会立即终局。</p>
+      <button class="btn btn--primary" type="button" data-modal-close>完成</button>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     Disconnect modal
+     ===================================================== -->
+<div class="modal" id="modal-disconnect" role="dialog" aria-modal="true" aria-hidden="true" data-static="true" aria-labelledby="disconnect-title">
+  <div class="modal__panel modal__panel--compact" role="document">
+    <div class="modal__head">
+      <div>
+        <p class="eyebrow">Connection lost</p>
+        <h2 id="disconnect-title">连接已断开</h2>
+      </div>
+    </div>
+    <p class="disconnect-copy" id="disconnect-copy">对方已离开牌桌。本局无法继续。</p>
+    <div class="modal__foot">
+      <button class="btn btn--primary" type="button" id="btn-disconnect-home">返回首页</button>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     Game over overlay
+     ===================================================== -->
+<div class="result-overlay hidden" id="gameover-overlay" role="dialog" aria-modal="true" aria-labelledby="result-title">
+  <div class="result-card">
+    <div class="result-head">
+      <div>
+        <p class="eyebrow">Table closed · Final ledger</p>
+        <h1 id="result-title">终局</h1>
+        <p id="result-reason">—</p>
+      </div>
+      <span class="result-stamp" id="result-stamp">终</span>
+    </div>
+
+    <div class="result-duelists" id="result-duelists"></div>
+
+    <div class="result-stats" id="result-stats"></div>
+
+    <div class="result-foot">
+      <p>本局结束。数据不会被保存。</p>
+      <div class="btn-row">
+        <button class="btn btn--ghost" type="button" data-modal-open="modal-rules">查看规则</button>
+        <button class="btn btn--primary" type="button" id="btn-result-home">返回首页</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../shared/ui.js" defer></script>
+<script src="../../shared/p2p.js" defer></script>
+<script src="engine.js" defer></script>
+<script src="app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="游戏集：给两个人的回合制游戏。公平规则，纯 P2P 联机，无需注册。">
+<meta name="theme-color" content="#f2efe8">
+<title>游戏集 · 双人游戏</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23f2efe8'/%3E%3Crect x='15' y='15' width='34' height='34' fill='%23fffdf8' stroke='%23171512' stroke-width='2'/%3E%3Ccircle cx='25' cy='25' r='3' fill='%23171512'/%3E%3Ccircle cx='39' cy='32' r='3' fill='%23171512'/%3E%3Ccircle cx='25' cy='39' r='3' fill='%23171512'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="shared/base.css">
+<link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+<header class="site-head wrap">
+  <a class="wordmark" href="index.html" aria-label="游戏集首页">
+    <span class="wordmark__mark">集</span>
+    <span class="wordmark__text">游戏集 <span class="wordmark__en">GAME COLLECTION</span></span>
+  </a>
+  <div class="head-tools">
+    <span class="hub-signal"><span class="hub-signal__dot"></span>纯 P2P 联机</span>
+    <span class="hub-index mono">NO. 01</span>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero__copy">
+      <p class="eyebrow">Two-player games · after hours</p>
+      <h1 id="hero-title">两张椅子，<br><em>几局游戏。</em></h1>
+      <p class="hero__lead">给两个人的回合制游戏集。没有服务器，没有倒计时，也没有第三者。规则说清楚，坐下来玩。</p>
+    </div>
+    <div class="hero__aside">
+      <div class="hero__rule" aria-hidden="true"></div>
+      <dl class="hero__facts">
+        <div><dt>已收录</dt><dd>01</dd></div>
+        <div><dt>每局人数</dt><dd>02</dd></div>
+        <div><dt>需要注册</dt><dd>不需要</dd></div>
+      </dl>
+      <p class="hero__note">对局数据仅在两台设备之间直连。房间码由你们自己交换。</p>
+    </div>
+  </section>
+
+  <section class="collection" aria-labelledby="collection-title">
+    <div class="collection__head">
+      <div>
+        <p class="eyebrow">Now playing</p>
+        <h2 id="collection-title">现在可以玩</h2>
+      </div>
+      <span class="collection__meta mono">01 / 01</span>
+    </div>
+
+    <a class="game-card" href="games/dice-table/index.html">
+      <div class="game-card__visual" aria-hidden="true">
+        <span class="visual-caption mono">DICE TABLE / 01</span>
+        <div class="still-life">
+          <span class="table-shadow"></span>
+          <div class="die die--a">
+            <i class="dot" style="grid-area:1/1"></i>
+            <i class="dot" style="grid-area:1/3"></i>
+            <i class="dot" style="grid-area:2/2"></i>
+            <i class="dot" style="grid-area:3/1"></i>
+            <i class="dot" style="grid-area:3/3"></i>
+          </div>
+          <div class="die die--b">
+            <i class="dot" style="grid-area:1/1"></i>
+            <i class="dot" style="grid-area:2/1"></i>
+            <i class="dot" style="grid-area:2/3"></i>
+            <i class="dot" style="grid-area:3/3"></i>
+          </div>
+          <div class="die die--c is-accent">
+            <i class="dot" style="grid-area:1/1"></i>
+            <i class="dot" style="grid-area:2/2"></i>
+            <i class="dot" style="grid-area:3/3"></i>
+          </div>
+          <span class="still-life__line"></span>
+          <span class="still-life__caption">连赢不必声张</span>
+        </div>
+      </div>
+
+      <div class="game-card__body">
+        <div class="game-card__top">
+          <span class="tag tag--accent">可用</span>
+          <span class="game-card__no mono">01</span>
+        </div>
+        <div>
+          <p class="eyebrow">Three dice · two players</p>
+          <h3>骰局</h3>
+          <p class="game-card__desc">三颗骰子，一手牌型。轮流坐庄、自由下注，按牌型倍数结算。可选贷款和弃权，所有规则摆在明面上。</p>
+        </div>
+        <div class="game-card__specs">
+          <span>2 人</span>
+          <span>回合制</span>
+          <span>跨设备联机</span>
+          <span>无倒计时</span>
+        </div>
+        <div class="game-card__foot">
+          <span class="game-card__state"><i></i>纯 P2P · 无需注册</span>
+          <span class="enter-link">进入游戏 <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+      </div>
+    </a>
+
+    <div class="upcoming">
+      <span class="upcoming__mark">+</span>
+      <span>下一款游戏，留一张空桌。</span>
+      <span class="upcoming__en mono">MORE TO COME</span>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot wrap">
+  <span class="site-foot__note"><span class="site-foot__dot"></span>纯前端 · WebRTC 直连 · 不保存对局数据</span>
+  <span>游戏集 · 为两个人准备</span>
+</footer>
+
+</body>
+</html>
