@@ -23,7 +23,8 @@ function settings(overrides = {}) {
       loansEnabled: false,
       debtLimit: 2000,
       interestRate: 0,
-      allowFold: false
+      allowFold: false,
+      gameMode: "classic"
     },
     overrides
   );
@@ -132,6 +133,52 @@ test("banker hifumi loses double without the child rolling", () => {
   const state = created.state;
   DiceEngine.placeBet(state, "guest", 100);
   DiceEngine.rollBanker(state, "host");
+  assert.equal(state.phase, "settled");
+  assert.equal(state.outcome.type, "banker-hifumi");
+  assert.equal(state.players.host.chips, 800);
+  assert.equal(state.players.guest.chips, 1200);
+  assert.equal(state.childRolls.length, 0);
+});
+
+test("single-roll mode settles a no-hand after exactly one throw", () => {
+  const created = newGame([6, 2, 1, 2, 4], { gameMode: "single" });
+  const state = created.state;
+  DiceEngine.placeBet(state, "guest", 100);
+  DiceEngine.rollBanker(state, "host");
+
+  assert.equal(state.phase, "settled");
+  assert.equal(state.bankerRolls.length, 1);
+  assert.equal(state.bankerHand.kind, "bust");
+  assert.equal(state.outcome.type, "banker-bust");
+  assert.equal(state.childRolls.length, 0);
+  assert.equal(state.players.host.chips, 900);
+  assert.equal(state.players.guest.chips, 1100);
+});
+
+test("single-roll mode compares one banker throw with one child throw", () => {
+  const created = newGame([6, 2, 4, 5, 6, 1, 1, 1], { gameMode: "single" });
+  const state = created.state;
+  DiceEngine.placeBet(state, "guest", 100);
+  DiceEngine.rollBanker(state, "host");
+  assert.equal(state.bankerRolls.length, 1);
+  assert.equal(state.bankerHand.kind, "shigoro");
+  DiceEngine.childAction(state, "guest", "roll");
+
+  assert.equal(state.childRolls.length, 1);
+  assert.equal(state.childHand.kind, "pinzoro");
+  assert.equal(state.phase, "settled");
+  assert.equal(state.outcome.winnerId, "guest");
+  assert.equal(state.outcome.amount, 500);
+  assert.equal(state.players.host.chips, 500);
+  assert.equal(state.players.guest.chips, 1500);
+});
+
+test("single-roll mode keeps hifumi as an immediate double loss", () => {
+  const created = newGame([6, 2, 1, 2, 3], { gameMode: "single" });
+  const state = created.state;
+  DiceEngine.placeBet(state, "guest", 100);
+  DiceEngine.rollBanker(state, "host");
+
   assert.equal(state.phase, "settled");
   assert.equal(state.outcome.type, "banker-hifumi");
   assert.equal(state.players.host.chips, 800);

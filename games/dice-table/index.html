@@ -81,6 +81,26 @@
             </header>
             <p class="panel-lead">由你设定本局规则。规则一旦开局，双方都不能更改。</p>
 
+            <fieldset class="mode-picker">
+              <legend class="field__label">对局模式</legend>
+              <div class="mode-grid">
+                <label class="mode-option is-selected">
+                  <input type="radio" name="gameMode" value="classic" checked>
+                  <span class="mode-option__body">
+                    <strong>标准局</strong>
+                    <em>原著规则 · 最多三投</em>
+                  </span>
+                </label>
+                <label class="mode-option">
+                  <input type="radio" name="gameMode" value="single">
+                  <span class="mode-option__body">
+                    <strong>全随机局</strong>
+                    <em>一掷定局 · 不重投</em>
+                  </span>
+                </label>
+              </div>
+            </fieldset>
+
             <div class="field">
               <label class="field__label" for="host-name">你的名字 <span class="field__hint">最多 14 个字</span></label>
               <input id="host-name" name="hostName" type="text" maxlength="14" autocomplete="off" placeholder="房主">
@@ -283,6 +303,7 @@
             <p class="eyebrow">Room</p>
             <dl class="room-facts" id="connect-room-facts">
               <div><dt>房主</dt><dd id="connect-host-name">—</dd></div>
+              <div><dt>对局模式</dt><dd id="connect-mode">—</dd></div>
               <div><dt>初始筹码</dt><dd id="connect-chips">—</dd></div>
               <div><dt>贷款</dt><dd id="connect-loans">—</dd></div>
               <div><dt>债务上限</dt><dd id="connect-debt">—</dd></div>
@@ -515,7 +536,7 @@
                 <div class="roll-control hidden" id="action-banker">
                   <div class="control-copy">
                     <span class="control-label">庄家行动</span>
-                    <p>最多三投，出有效牌型即停。无目自动判负。</p>
+                    <p id="banker-roll-copy">最多三投，出有效牌型即停。无目自动判负。</p>
                   </div>
                   <button class="btn btn--accent" type="button" id="btn-roll-banker">掷骰</button>
                 </div>
@@ -598,7 +619,7 @@
         <div>
           <h3>这是什么</h3>
           <p>「骰局」是一个公平双人回合制骰子游戏。两位玩家各持相同初始筹码，轮流坐庄，用三颗骰子组成牌型，按牌型倍数结算筹码。</p>
-          <p>没有 AI，没有时间限制，没有出千机制。三颗骰子均为公平随机，由房主端使用系统安全随机数生成。</p>
+          <p>开局可选「标准局」或「全随机局」：前者按原著最多三投，后者双方各只投一次。没有 AI，没有时间限制，没有出千机制；三颗骰子均为公平随机，由房主端使用系统安全随机数生成。</p>
           <p class="rule-aside">这里的所有筹码都只是游戏数值，不涉及真实货币。</p>
         </div>
       </section>
@@ -608,6 +629,7 @@
         <div>
           <h3>开局设置</h3>
           <div class="rule-defs">
+            <div><dt>对局模式</dt><dd>标准局：无目自动重掷三颗骰子，最多三投；三次无目判负。全随机局：双方各只投一次，所有原始结果直接结算，无目立即判负。</dd></div>
             <div><dt>初始筹码</dt><dd>房主设定，双方相同。所有下注和赔付都以它为起点。</dd></div>
             <div><dt>贷款开关</dt><dd>关闭时没有欠款；开启时双方可以借款、还款，并按手计息。</dd></div>
             <div><dt>债务上限</dt><dd>仅贷款开启时生效。任一玩家累计欠款达到该数值时终局。</dd></div>
@@ -622,11 +644,15 @@
         <span class="rules-number">02</span>
         <div>
           <h3>一手牌</h3>
+          <div class="rule-callouts rule-callouts--modes">
+            <p><strong>标准局：</strong>每次无目都会自动重掷全部三颗骰子，最多三投；任意一投出现有效牌型立即停手，第三次仍无目自动判负。</p>
+            <p><strong>全随机局：</strong>双方各只投一次，不重投；所有结果直接结算，无目立即判负。骰子始终由系统统一随机，玩家不能保留或选择重掷单颗骰子。</p>
+          </div>
           <ol class="rule-steps">
             <li><strong>下注。</strong>当前闲家决定注额，最少 1 筹码，最多不超过自己当前持有的筹码。需要更多筹码可以先贷款。</li>
-            <li><strong>庄家掷骰。</strong>庄家最多掷三次，直到出现有效牌型。无目必须重掷；出现有效牌型立即停手。</li>
-            <li><strong>庄家自动输。</strong>若庄家三投仍无目，或掷出 1 · 2 · 3，则本手立即结束，闲家不用再掷。</li>
-            <li><strong>闲家决定。</strong>庄家成牌后，闲家可以弃权（若开启）或掷骰。闲家同样最多三次，出现有效牌型即停。</li>
+            <li><strong>庄家掷骰。</strong>按当前模式掷骰：标准局最多三投，全随机局只投一次。出现有效牌型即停手。</li>
+            <li><strong>庄家自动输。</strong>若庄家最终无目，或掷出 1 · 2 · 3，则本手立即结束，闲家不用再掷。</li>
+            <li><strong>闲家决定。</strong>庄家成牌后，闲家可以弃权（若开启）或掷骰。闲家按同一模式掷骰。</li>
             <li><strong>比牌与结算。</strong>双方牌型比较大小，输家按赢家牌型的倍数支付筹码。牌型相同则和局，不退不赔。</li>
             <li><strong>计息与下一手。</strong>本手结算后计息、检查终局，然后双方可以整理贷款；两人都准备后进入下一手，庄闲互换。</li>
           </ol>
@@ -649,7 +675,7 @@
             <p><strong>普通目：</strong>两颗同点，剩下的单颗就是点数。例如 2 · 2 · 6 是「六点」，不是总和。点数 6 最大，1 最小。</p>
             <p><strong>豹子比较：</strong>不同数字的豹子按数字大小比，6 · 6 · 6 大于 2 · 2 · 2；1 · 1 · 1 单独作为最强牌。</p>
             <p><strong>和局：</strong>双方最终牌型的等级完全相同，本手不结算。没有「庄家赢同点」的隐藏规则。</p>
-            <p><strong>无目：</strong>三次都没有有效牌型，算自动输一倍。庄家无目时闲家不掷；闲家无目时庄家收一倍。</p>
+            <p><strong>无目：</strong>按当前模式最终没有有效牌型，算自动输一倍。庄家无目时闲家不掷；闲家无目时庄家收一倍。</p>
             <p><strong>比牌大小：</strong>一之豹 &gt; 豹子 &gt; 四五六 &gt; 普通六点 &gt; … &gt; 普通一点。一二三和无目是负牌，不参与大小比较。</p>
           </div>
         </div>
@@ -729,7 +755,7 @@
         </div>
       </section>
 
-      <p class="rules-end">规则版本 1.0 · 用完请把桌面留给下一位朋友</p>
+      <p class="rules-end">规则版本 1.1 · 用完请把桌面留给下一位朋友</p>
     </div>
 
     <div class="modal__foot">

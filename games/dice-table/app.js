@@ -137,9 +137,17 @@
     return player(App.localId);
   }
 
+  function modeInfo(id) {
+    return (Engine.MODE_GUIDE && Engine.MODE_GUIDE[id]) || Engine.MODE_GUIDE.classic;
+  }
+
+  function modeLabel(id) {
+    return modeInfo(id).label;
+  }
+
   function settingsSummary(settings) {
     if (!settings) return "";
-    var parts = ["初始 " + fmt(settings.startingChips)];
+    var parts = [modeLabel(settings.gameMode), "初始 " + fmt(settings.startingChips)];
     if (settings.loansEnabled) {
       parts.push(
         "贷款上限 " + fmt(settings.debtLimit) + " / 利息 " + settings.interestRate + "% 每手"
@@ -223,7 +231,20 @@
     $("create-interest").value = defaults.interestRate;
     $("create-loans").checked = defaults.loansEnabled;
     $("create-fold").checked = defaults.allowFold;
+    var modeInput = document.querySelector(
+      'input[name="gameMode"][value="' + (defaults.gameMode || "classic") + '"]'
+    );
+    if (modeInput) modeInput.checked = true;
+    syncModePicker();
     syncCreateLoanFields();
+  }
+
+  function syncModePicker() {
+    var inputs = document.querySelectorAll('input[name="gameMode"]');
+    for (var i = 0; i < inputs.length; i += 1) {
+      var option = inputs[i].closest(".mode-option");
+      if (option) option.classList.toggle("is-selected", inputs[i].checked);
+    }
   }
 
   function syncCreateLoanFields() {
@@ -288,6 +309,9 @@
     $("create-form").addEventListener("submit", onCreateRoom);
     $("join-form").addEventListener("submit", onReadInvite);
     $("create-loans").addEventListener("change", syncCreateLoanFields);
+    qsa('input[name="gameMode"]').forEach(function (input) {
+      input.addEventListener("change", syncModePicker);
+    });
     qsa("[data-home-tab]").forEach(function (tab) {
       tab.addEventListener("click", function () {
         setHomeMode(tab.getAttribute("data-home-tab"));
@@ -379,6 +403,7 @@
 
   function readCreateForm() {
     var hostName = $("host-name").value.trim() || "房主";
+    var modeInput = document.querySelector('input[name="gameMode"]:checked');
     var loans = $("create-loans").checked;
     var startingChips = Number($("create-chips").value);
     var debtLimit = Number($("create-debt-limit").value);
@@ -390,7 +415,8 @@
       loansEnabled: loans,
       debtLimit: debtLimit,
       interestRate: loans ? Number($("create-interest").value) : 0,
-      allowFold: $("create-fold").checked
+      allowFold: $("create-fold").checked,
+      gameMode: modeInput ? modeInput.value : "classic"
     };
     var validated = Engine.validateSettings(raw);
     if (!validated.ok) return { ok: false, error: validated.error };
@@ -565,6 +591,7 @@
     var settings = App.room.settings;
     var rows = [
       ["房主", App.room.hostName],
+      ["对局模式", modeLabel(settings.gameMode)],
       ["初始筹码", fmt(settings.startingChips)],
       ["贷款", settings.loansEnabled ? "开启" : "关闭"],
       ["债务上限", settings.loansEnabled ? fmt(settings.debtLimit) : "—"],
@@ -663,6 +690,7 @@
     if (!App.room) return;
     var s = App.room.settings;
     setText("connect-host-name", App.room.hostName || "—");
+    setText("connect-mode", modeLabel(s.gameMode));
     setText("connect-chips", fmt(s.startingChips));
     setText("connect-loans", s.loansEnabled ? "开启" : "关闭");
     setText("connect-debt", s.loansEnabled ? fmt(s.debtLimit) : "—");
@@ -818,6 +846,7 @@
     if (!wrap) return;
     wrap.innerHTML = "";
     var rows = [
+      ["对局模式", modeLabel(settings.gameMode)],
       ["初始筹码", fmt(settings.startingChips)],
       ["贷款", settings.loansEnabled ? "开启" : "关闭"],
       ["债务上限", settings.loansEnabled ? fmt(settings.debtLimit) : "—"],
@@ -1447,10 +1476,19 @@
     if (g.phase === "banker-turn" && isBanker) {
       hideActionControls();
       setHidden($("action-banker"), false);
+      setText(
+        "banker-roll-copy",
+        g.settings.gameMode === "single"
+          ? "一投定局，无目判负。"
+          : "最多三投，出有效牌型即停。无目自动判负。"
+      );
       setActionMeta(
         "Your roll",
         "轮到你掷骰",
-        "本手注额 " + fmt(g.bet) + "。出有效牌型即停，最多三投。",
+        "本手注额 " + fmt(g.bet) + "。" +
+          (g.settings.gameMode === "single"
+            ? "一投定局，无目判负。"
+            : "出有效牌型即停，最多三投。"),
         "YOUR TURN"
       );
       return;
@@ -1472,7 +1510,10 @@
       var fee = Math.max(1, Math.ceil(g.bet * Engine.FOLD_RATE));
       setText(
         "child-control-copy",
-        "庄家已定牌：" + (g.bankerHand ? g.bankerHand.label : "—") + "。你可以弃权，或掷骰比牌。"
+        "庄家已定牌：" + (g.bankerHand ? g.bankerHand.label : "—") + "。" +
+          (g.settings.gameMode === "single"
+            ? "你只有一投，无目判负；也可以弃权。"
+            : "你可以弃权，或掷骰比牌。")
       );
       var foldButton = $("btn-fold");
       setHidden(foldButton, !g.settings.allowFold);
@@ -1480,7 +1521,10 @@
       setActionMeta(
         "Your call",
         "看完庄家的牌",
-        "弃权费为注额的 50%，向上取整；掷骰则按牌型结算。",
+        "弃权费为注额的 50%，向上取整；" +
+          (g.settings.gameMode === "single"
+            ? "掷骰一投定局，无目判负。"
+            : "掷骰最多三投，按牌型结算。"),
         "YOUR TURN"
       );
       return;

@@ -24,7 +24,23 @@
     loansEnabled: true,
     debtLimit: 2000,
     interestRate: 5,
-    allowFold: true
+    allowFold: true,
+    gameMode: "classic"
+  };
+
+  var MODE_GUIDE = {
+    classic: {
+      id: "classic",
+      label: "标准局",
+      subtitle: "原著规则 · 最多三投",
+      rule: "无目自动重掷三颗骰子，最多三投；三次无目判负。"
+    },
+    single: {
+      id: "single",
+      label: "全随机局",
+      subtitle: "一掷定局 · 不重投",
+      rule: "双方各只投一次，所有结果直接结算；无目直接判负。"
+    }
   };
 
   var LIMITS = {
@@ -81,7 +97,7 @@
     },
     {
       key: "bust",
-      dice: "三次无目",
+      dice: "无有效牌型",
       label: "无目",
       term: "目なし",
       strength: "负牌",
@@ -123,7 +139,8 @@
       loansEnabled: raw.loansEnabled !== false,
       debtLimit: isPlainInt(raw.debtLimit) ? raw.debtLimit : DEFAULT_SETTINGS.debtLimit,
       interestRate: isNum(raw.interestRate) ? raw.interestRate : DEFAULT_SETTINGS.interestRate,
-      allowFold: raw.allowFold !== false
+      allowFold: raw.allowFold !== false,
+      gameMode: raw.gameMode === "single" ? "single" : "classic"
     };
     if (settings.startingChips < LIMITS.startingChips[0] || settings.startingChips > LIMITS.startingChips[1]) {
       return { error: "初始筹码需在 1 到 100,000,000 之间。" };
@@ -304,6 +321,43 @@
     return { rolls: rolls, hand: finalHand };
   }
 
+  function rollOnce(rng) {
+    var random = rng || defaultRng;
+    var dice = [random(1, 6), random(1, 6), random(1, 6)];
+    var hand = evaluateRoll(dice);
+    return {
+      rolls: [{ dice: dice, hand: hand }],
+      hand: hand.resolved ? hand : bustHand()
+    };
+  }
+
+  function rollForMode(settings, rng) {
+    return settings.gameMode === "single" ? rollOnce(rng) : rollHand(rng);
+  }
+
+  function logRollResult(state, playerName, result, mode) {
+    result.rolls.forEach(function (roll, index) {
+      var text =
+        playerName + " 第 " + (index + 1) + " 投：" +
+        roll.dice.join(" / ") + " · " + roll.hand.label;
+      var suffix = "";
+      if (!roll.hand.resolved) {
+        suffix = mode === "single" ? "。" : index < 2 ? "，重掷。" : "。";
+      }
+      addLog(state, text + suffix, "roll");
+    });
+    if (
+      result.hand.kind === "bust" &&
+      (!result.rolls.length || !result.rolls[result.rolls.length - 1].hand.resolved)
+    ) {
+      addLog(
+        state,
+        playerName + (mode === "single" ? " 一投无目，本手自动判负。" : " 三投无目，本手自动判负。"),
+        "roll"
+      );
+    }
+  }
+
   function compareHands(a, b) {
     if (!a || !b || !a.resolved || !b.resolved) return 0;
     if (a.rank === b.rank) return 0;
@@ -449,19 +503,10 @@
     if (playerId !== state.bankerId) return fail("只有庄家可以掷骰。");
     if (!state.bet) return fail("本手尚未下注。");
     var banker = getPlayer(state, state.bankerId);
-    var result = rollHand(rngFor(state, rngOverride));
+    var result = rollForMode(state.settings, rngFor(state, rngOverride));
     state.bankerRolls = result.rolls;
     state.bankerHand = result.hand;
-
-    result.rolls.forEach(function (roll, index) {
-      var text =
-        banker.name + " 第 " + (index + 1) + " 投：" + roll.dice.join(" / ") + " · " +
-        roll.hand.label;
-      addLog(state, text + (roll.hand.resolved ? "" : index < 2 ? "，重掷。" : "。"), "roll");
-    });
-    if (!result.rolls.length || !result.rolls[result.rolls.length - 1].hand.resolved) {
-      addLog(state, banker.name + " 三投无目，本手自动判负。", "roll");
-    }
+    logRollResult(state, banker.name, result, state.settings.gameMode);
 
     if (result.hand.autoLoss) {
       var type = result.hand.kind === "hifumi" ? "banker-hifumi" : "banker-bust";
@@ -512,18 +557,10 @@
 
     if (action !== "roll") return fail("未知的闲家行动。");
 
-    var result = rollHand(rngFor(state, rngOverride));
+    var result = rollForMode(state.settings, rngFor(state, rngOverride));
     state.childRolls = result.rolls;
     state.childHand = result.hand;
-    result.rolls.forEach(function (roll, index) {
-      var text =
-        child.name + " 第 " + (index + 1) + " 投：" + roll.dice.join(" / ") + " · " +
-        roll.hand.label;
-      addLog(state, text + (roll.hand.resolved ? "" : index < 2 ? "，重掷。" : "。"), "roll");
-    });
-    if (!result.rolls.length || !result.rolls[result.rolls.length - 1].hand.resolved) {
-      addLog(state, child.name + " 三投无目，本手自动判负。", "roll");
-    }
+    logRollResult(state, child.name, result, state.settings.gameMode);
 
     if (result.hand.autoLoss) {
       if (result.hand.kind === "hifumi") {
@@ -543,13 +580,15 @@
     var winner = getPlayer(state, loserRole === "banker" ? state.childId : state.bankerId);
     var amount = state.bet * losingHand.multiplier;
     var transfer = transferChips(state, loser, winner, amount);
-    var reasonLabel = losingHand.kind === "hifumi" ? "一二三，自动输两倍" : "无目，自动输一倍";
+    var detail =
+      losingHand.kind === "hifumi"
+        ? loser.name + " 掷出 1 · 2 · 3（一二三，自动输两倍），支付 " +
+          chipsText(amount) + "。"
+        : loser.name + " 最终无目，自动输一倍，支付 " + chipsText(amount) + "。";
     var outcome = {
       type: type,
       title: winner.name + " 收下本手",
-      detail:
-        loser.name + " 掷出" + losingHand.label + "（" + reasonLabel + "），支付 " +
-        chipsText(amount) + "。",
+      detail: detail,
       winnerId: winner.id,
       loserId: loser.id,
       amount: amount,
@@ -915,7 +954,8 @@
       foldRate: FOLD_RATE,
       defaultSettings: clone(DEFAULT_SETTINGS),
       limits: clone(LIMITS),
-      hands: clone(HAND_GUIDE)
+      hands: clone(HAND_GUIDE),
+      modes: clone(MODE_GUIDE)
     };
   }
 
@@ -925,6 +965,7 @@
     DEFAULT_SETTINGS: clone(DEFAULT_SETTINGS),
     LIMITS: clone(LIMITS),
     HAND_GUIDE: clone(HAND_GUIDE),
+    MODE_GUIDE: clone(MODE_GUIDE),
     evaluateRoll: evaluateRoll,
     compareHands: compareHands,
     validateSettings: function (raw) {
